@@ -1,25 +1,14 @@
-import { Button, Card, CardContent, CardHeader, Grid } from '@mui/material'
-import { AddDialog } from './AddDialog'
+import { Card, CardContent, CardHeader, Grid } from '@mui/material'
 import { MachineTable } from './MachineTable'
-import AddCircleIcon from '@mui/icons-material/AddCircle'
 import React from 'react'
+import { AddDialog } from './AddDialog'
 
 export default function Page() {
-  const [addDialog, setAddDialog] = React.useState(false)
   return (
     <Grid container spacing={6}>
       <Grid item xs={12}>
         <Card>
-          {addDialog ? <AddDialog show={setAddDialog} /> : null}
-          <CardHeader
-            title='Danh sách máy quét'
-            action={
-              <Button variant='outlined' onClick={() => setAddDialog(true)}>
-                <AddCircleIcon />
-                &nbsp; Thêm máy quét
-              </Button>
-            }
-          />
+          <CardHeader title='Danh sách máy quét' action={<AddDialog />} />
           <CardContent>
             <MachineTable />
           </CardContent>

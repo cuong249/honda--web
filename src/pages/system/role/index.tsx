@@ -19,11 +19,13 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete'
 import React, { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { getAllWarehouse } from '@/store/reducers/warehouse'
+
 import { AppDispatch } from '@/store'
 import SaveIcon from '@mui/icons-material/Save'
 import CancelIcon from '@mui/icons-material/Cancel'
 import AddIcon from '@mui/icons-material/Add'
+import { getListRole } from '@/store/reducers/role'
+import { ROLE } from '@/api/enum'
 
 function a11yProps(index: number) {
   return {
@@ -35,7 +37,7 @@ export default function Page() {
   const warehouse = useSelector((store: any) => store.warehouse.warehouses)
   const dispatch = useDispatch<AppDispatch>()
   useEffect(() => {
-    dispatch(getAllWarehouse())
+    dispatch(getListRole())
   }, [])
   const [addRoll, setAddRoll] = React.useState(false)
   const [value, setValue] = React.useState(0)
@@ -71,17 +73,36 @@ export default function Page() {
             </ListItem>
           ) : null}
           <List>
-            {warehouse.map((items: any) => (
-              <ListItem
-                secondaryAction={
-                  <IconButton edge='end' aria-label='delete'>
-                    <DeleteIcon />
-                  </IconButton>
-                }
-              >
-                <ListItemText primary={items.name} />
-              </ListItem>
-            ))}
+            <ListItem
+              key={ROLE.WAREHOUSE}
+              secondaryAction={
+                <IconButton edge='end' aria-label='delete'>
+                  <DeleteIcon />
+                </IconButton>
+              }
+            >
+              <ListItemText primary={'Kho'} />
+            </ListItem>
+            <ListItem
+              key={ROLE.DELIVERY}
+              secondaryAction={
+                <IconButton edge='end' aria-label='delete'>
+                  <DeleteIcon />
+                </IconButton>
+              }
+            >
+              <ListItemText primary={'Tài xế'} />
+            </ListItem>
+            <ListItem
+              key={ROLE.MAKER}
+              secondaryAction={
+                <IconButton edge='end' aria-label='delete'>
+                  <DeleteIcon />
+                </IconButton>
+              }
+            >
+              <ListItemText primary={'Maker'} />
+            </ListItem>
           </List>
         </Card>
       </Grid>

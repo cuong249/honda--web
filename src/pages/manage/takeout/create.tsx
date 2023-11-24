@@ -15,11 +15,11 @@ interface Props {
   open: boolean
   handleClose: () => void
   handleConfirm: () => Promise<boolean>
-  product: Product | undefined
-  setProduct: any
+  takeout: Takeout | undefined
+  setTakeout: any
 }
 
-export default function DialogCreate({ open, handleClose, handleConfirm, product, setProduct }: Props) {
+export default function DialogCreate({ open, handleClose, handleConfirm, takeout, setTakeout }: Props) {
   // const { user } = useAuth()
   const query = JSON.stringify({
     state: STATE.ACTIVE

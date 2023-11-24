@@ -1,36 +1,32 @@
-import { DialogTitle, DialogContent, TextField, DialogActions, Dialog, IconButton, MenuItem } from '@mui/material'
+import { DialogTitle, DialogContent, TextField, DialogActions, Dialog, IconButton } from '@mui/material'
 import { Box } from '@mui/system'
 import CloseIcon from '@mui/icons-material/Close'
-import React, { Dispatch, SetStateAction, useEffect } from 'react'
+import React, { Dispatch, SetStateAction } from 'react'
 import Button from '@mui/material/Button'
 import Divider from '@mui/material/Divider'
-import { useSelector, useDispatch } from 'react-redux'
-import { AppDispatch } from '@/store'
-import { updateMachine } from '@/store/reducers/machine'
+import { useSelector } from 'react-redux'
+import { STATE_MAINTAIN, TYPE_MACHINE } from '@/api/enum'
+import { machine } from 'os'
 
 interface Data {
   id: string
   show: Dispatch<SetStateAction<boolean>>
 }
 export const DetailDialog = (props: Data) => {
-  const warehouses = useSelector((store: any) => store.warehouse.warehouses)
-  const machines = useSelector((store: any) => store.machine.machines)
-  const exsistMachine = machines.find((item: any) => item.id == props.id)
-  const [open, setOpen] = React.useState(true)
+  const machines = useSelector((store: any) => store.machine.machines).find((item: any) => item.id == props.id)
   const handleClose = () => {
     props.show(false)
-    setOpen(false)
   }
   return (
     <>
-      <Dialog open={open}>
+      <Dialog open={true}>
         <DialogTitle variant='h3'>
           {'Thông tin máy quét'}
           <IconButton
             aria-label='close'
             onClick={handleClose}
             sx={{
-              left: '60%'
+              left: '50%'
             }}
           >
             <CloseIcon fontSize='inherit' />
@@ -43,7 +39,7 @@ export const DetailDialog = (props: Data) => {
               label='Tên'
               variant='outlined'
               name='name'
-              defaultValue={exsistMachine.name}
+              defaultValue={machines.name}
               sx={{
                 m: 5,
                 width: '25ch'
@@ -56,7 +52,7 @@ export const DetailDialog = (props: Data) => {
               label='Loại'
               variant='outlined'
               name='type'
-              defaultValue={exsistMachine.type == 'MOVING' ? 'Di động' : 'Cố định'}
+              defaultValue={machines.type == TYPE_MACHINE.MOVING ? 'Di động' : 'Cố định'}
               sx={{
                 m: 5,
                 width: '25ch'
@@ -69,7 +65,7 @@ export const DetailDialog = (props: Data) => {
               label='Kho'
               name='warehouseId'
               variant='outlined'
-              defaultValue={warehouses.find((item: any) => item.id == exsistMachine.warehouseId).name}
+              defaultValue={machines.warehouse?.name}
               sx={{
                 m: 5,
                 width: '25ch'
@@ -78,15 +74,14 @@ export const DetailDialog = (props: Data) => {
                 readOnly: true
               }}
             />
-
             <TextField
               label='Trạng thái'
               variant='outlined'
               name='state'
               defaultValue={
-                exsistMachine.state == 'ACTIVE'
+                machines.state == STATE_MAINTAIN.ACTIVE
                   ? 'Đang hoạt động'
-                  : exsistMachine.state == 'INACTIVE'
+                  : machines.state == STATE_MAINTAIN.INACTIVE
                   ? 'Không hoạt động'
                   : 'Bảo trì'
               }
@@ -101,7 +96,8 @@ export const DetailDialog = (props: Data) => {
             <TextField
               label='Vị trí'
               variant='outlined'
-              defaultValue={warehouses.find((item: any) => item.id == exsistMachine.warehouseId).address}
+              name='location'
+              defaultValue={machines.location}
               sx={{
                 m: 5,
                 width: '90%'

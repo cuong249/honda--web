@@ -15,17 +15,28 @@ import MenuItem from '@mui/material/MenuItem'
 import DeleteIcon from '@mui/icons-material/Delete'
 import ModeEditIcon from '@mui/icons-material/ModeEdit'
 import { TablePagination } from '@mui/material'
-import { getAllWarehouse } from '@/store/reducers/warehouse'
+import CircleIcon from '@mui/icons-material/Circle'
 import { DetailDialog } from './DetailDialog'
 import { EditDialog } from './EditDialog'
 import { DeleteDialog } from './DeleteDialog'
+import { getListWarehouse } from '@/store/reducers/warehouse'
+import { ROLE, STATE, STATE_MAINTAIN } from '@/api/enum'
+import { useAuth } from '@/hooks/useAuth'
 
 export const WarehouseTable = () => {
+  const { user } = useAuth()
+  const query =
+    user?.role == ROLE.ADMIN
+      ? JSON.stringify({
+          state: [STATE_MAINTAIN.ACTIVE, STATE_MAINTAIN.INACTIVE, STATE_MAINTAIN.MAINTAIN]
+        })
+      : JSON.stringify({
+          state: [STATE_MAINTAIN.ACTIVE, STATE_MAINTAIN.MAINTAIN]
+        })
   const warehouses = useSelector((store: any) => store.warehouse.warehouses)
-  const data = warehouses.filter((warehouse: any) => warehouse.type == 'HONDA')
   const dispatch = useDispatch<AppDispatch>()
   useEffect(() => {
-    dispatch(getAllWarehouse())
+    dispatch(getListWarehouse({ limit: 10, offset: 0, search: '', order: undefined, arrange: undefined, query: query }))
   }, [])
   const [detailDialog, setDetailDialog] = useState<boolean>(false)
   const [editDialog, setEditDialog] = useState<boolean>(false)
@@ -67,7 +78,7 @@ export const WarehouseTable = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {data.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((rows: any, index: any) => (
+            {warehouses.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((rows: any, index: any) => (
               <TableRow
                 hover
                 key={index}
@@ -86,7 +97,13 @@ export const WarehouseTable = () => {
                   {rows.address}
                 </TableCell>
                 <TableCell align='right' onClick={() => setDetailDialog(true)}>
-                  {rows.state == 'ACTIVE' ? 'Đang hoạt động' : 'Không hoạt động'}
+                  {rows.state == STATE.ACTIVE ? (
+                    <CircleIcon sx={{ fontSize: 8 }} color='success' />
+                  ) : (
+                    <CircleIcon sx={{ fontSize: 8 }} color='error' />
+                  )}
+                  &nbsp; &nbsp;
+                  {rows.state == STATE.ACTIVE ? 'Đang hoạt động' : 'Không hoạt động'}
                 </TableCell>
                 <TableCell align='center'>
                   <IconButton
@@ -142,11 +159,15 @@ export const WarehouseTable = () => {
       <TablePagination
         rowsPerPageOptions={[5, 10, 25]}
         component='div'
-        count={data.length}
+        count={warehouses.length}
         rowsPerPage={rowsPerPage}
         page={page}
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
+        labelRowsPerPage='Số dòng trên mỗi trang'
+        labelDisplayedRows={({ from, to, count }) =>
+          `${from}-${to} trong số ${count !== -1 ? count : `nhiều hơn ${to}`}`
+        }
       />
     </>
   )

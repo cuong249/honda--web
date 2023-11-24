@@ -22,7 +22,7 @@ export const getAccount = createAsyncThunk('appAccount/get', async (params: getP
 
 export const createAccount = createAsyncThunk('appAccount/create', async (account: Account) => {
   const response = await accountApi.create(account)
-
+  console.log(response.data)
   return response.data
 })
 

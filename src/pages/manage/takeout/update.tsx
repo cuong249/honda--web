@@ -1,6 +1,6 @@
 import CustomTextField from '@/@core/components/mui/text-field'
 import { STATE, STATE_MAINTAIN } from '@/api/enum'
-import { Product } from '@/api/types'
+import { Product, Takeout } from '@/api/types'
 import { AppDispatch, RootState } from '@/store'
 import { getListCategory } from '@/store/reducers/category'
 import { getListWarehouse } from '@/store/reducers/warehouse'
@@ -15,11 +15,11 @@ interface Props {
   open: boolean
   handleClose: () => void
   handleConfirm: () => Promise<boolean>
-  product: Product | undefined
-  setProduct: any
+  takeout: Takeout | undefined
+  setTakeout: any
 }
 
-export default function DialogUpdate({ open, handleClose, handleConfirm, product, setProduct }: Props) {
+export default function DialogUpdate({ open, handleClose, handleConfirm, takeout, setTakeout }: Props) {
   const query = JSON.stringify({
     state: STATE.ACTIVE
   })

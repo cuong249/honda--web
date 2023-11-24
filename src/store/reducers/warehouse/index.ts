@@ -10,7 +10,7 @@ interface updateParams {
 
 export const getListWarehouse = createAsyncThunk('appWarehouse/getList', async (params: getListParams) => {
   const response = await warehouseApi.getList(params)
-
+  console.log('kho' + response)
   return response.data
 })
 

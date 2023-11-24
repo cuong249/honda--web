@@ -4,7 +4,14 @@ import { useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { AppDispatch, RootState } from '@/store'
 import { useSelector } from 'react-redux'
-import { getListProduct, createProduct, updateProduct, deleteProduct } from '@/store/reducers/product'
+import {
+  getListProduct,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+  maintainProduct,
+  completeMaintainProduct
+} from '@/store/reducers/product'
 import { DataGrid, GridColDef, GridSortModel } from '@mui/x-data-grid'
 import { Product } from '@/api/types'
 import CustomChip from '@/@core/components/mui/chip'
@@ -17,6 +24,9 @@ import DialogCreate from './create'
 import React from 'react'
 import DialogDelete from './delete'
 import { useAuth } from '@/hooks/useAuth'
+import toast from 'react-hot-toast'
+import DialogMaintain from './maintain'
+import DialogMaintainComplete from './completemaintain'
 
 interface CellType {
   row: Product
@@ -45,6 +55,8 @@ export default function Page() {
   const [openUpdate, setOpenUpdate] = useState<boolean>(false)
   const [openCreate, setOpenCreate] = useState<boolean>(false)
   const [openDelete, setOpenDelete] = useState<boolean>(false)
+  const [openMaintain, setOpenMaintain] = useState<boolean>(false)
+  const [openCompleteMaintain, setOpenCompleteMaintain] = useState<boolean>(false)
 
   const dispatch = useDispatch<AppDispatch>()
   const store = useSelector((state: RootState) => state.product)
@@ -65,7 +77,7 @@ export default function Page() {
   }
 
   useEffect(() => {
-    console.log(query)
+    // console.log(productNew?.deliveryWarehouse.name)
   })
 
   useEffect(() => {
@@ -121,7 +133,13 @@ export default function Page() {
     ) {
       return true
     }
-    await dispatch(updateProduct({ id: productExist?.id as string, product: productExist as Product }))
+    const res = await dispatch(updateProduct({ id: productExist?.id as string, product: productExist as Product }))
+    if (res.meta.requestStatus == 'fulfilled') {
+      toast.success('Chỉnh sửa thành công!')
+    } else {
+      toast.error('Chỉnh sửa thất bại!')
+    }
+
     setOpenUpdate(false)
     await fetchData()
 
@@ -147,7 +165,12 @@ export default function Page() {
     ) {
       return true
     }
-    await dispatch(createProduct(productNew as Product))
+    const res = await dispatch(createProduct(productNew as Product))
+    if (res.meta.requestStatus == 'fulfilled') {
+      toast.success('Thêm XCD thành công!')
+    } else {
+      toast.error('Thêm XCD thất bại!')
+    }
     setOpenCreate(false)
     await fetchData()
 
@@ -162,8 +185,53 @@ export default function Page() {
     setOpenDelete(false)
   }
   const handleConfirmDelete = async () => {
-    await dispatch(deleteProduct(productExist!.id))
+    const res = await dispatch(deleteProduct(productExist!.id))
+    if (res.meta.requestStatus == 'fulfilled') {
+      toast.success('Xoá XCD thành công!')
+    } else {
+      toast.error('Xoá XCD thất bại!')
+    }
     setOpenDelete(false)
+    await fetchData()
+  }
+
+  const handleOpenMaintain = () => {
+    setOpenMaintain(true)
+  }
+
+  const handleCloseMaintain = () => {
+    setOpenMaintain(false)
+  }
+  const handleConfirmMaintain = async () => {
+    const res = await dispatch(
+      maintainProduct({ id: productExist?.id, description: productExist?.descriptionMaintenance })
+    )
+    if (res.meta.requestStatus == 'fulfilled') {
+      toast.success('Bảo trì XCD thành công!')
+    } else {
+      toast.error('Bảo trì XCD thất bại!')
+    }
+    setOpenMaintain(false)
+    await fetchData()
+
+    return true
+  }
+
+  const handleOpenCompleteMaintain = () => {
+    setOpenCompleteMaintain(true)
+  }
+
+  const handleCloseCompleteMaintain = () => {
+    setOpenCompleteMaintain(false)
+  }
+  const handleConfirmCompleteMaintain = async () => {
+    const res = await dispatch(completeMaintainProduct({ id: productExist?.id, nextDate: productExist?.nextDate }))
+    if (res.meta.requestStatus == 'fulfilled') {
+      toast.success('Hoàn tất bảo trì XCD thành công!')
+    } else {
+      toast.error('Hoàn tất bảo trì XCD thất bại!')
+    }
+    setOpenCompleteMaintain(false)
     await fetchData()
   }
 
@@ -207,7 +275,9 @@ export default function Page() {
       headerName: 'Kho hiện tại',
       sortable: false,
       renderCell: ({ row }: CellType) => (
-        <Typography sx={{ color: 'text.secondary' }}>{row.currentWarehouse.name}</Typography>
+        <Typography sx={{ color: 'text.secondary' }}>
+          {row.currentWarehouse ? row.currentWarehouse.name : ''}
+        </Typography>
       )
     },
     {
@@ -217,7 +287,9 @@ export default function Page() {
       headerName: 'Kho sử dụng',
       sortable: false,
       renderCell: ({ row }: CellType) => (
-        <Typography sx={{ color: 'text.secondary' }}>{row.deliveryWarehouse.name}</Typography>
+        <Typography sx={{ color: 'text.secondary' }}>
+          {row.deliveryWarehouse ? row.deliveryWarehouse.name : ''}
+        </Typography>
       )
     },
     {
@@ -227,7 +299,9 @@ export default function Page() {
       headerName: 'Kho lưu trữ',
       sortable: false,
       renderCell: ({ row }: CellType) => (
-        <Typography sx={{ color: 'text.secondary' }}>{row.storageWarehouse.name}</Typography>
+        <Typography sx={{ color: 'text.secondary' }}>
+          {row.storageWarehouse ? row.storageWarehouse.name : ''}
+        </Typography>
       )
     },
     {
@@ -259,34 +333,120 @@ export default function Page() {
             <OptionsMenu
               menuProps={{ sx: { '& .MuiMenuItem-root svg': { mr: 2 } } }}
               iconButtonProps={{ size: 'small', sx: { color: 'text.secondary' } }}
-              options={[
-                {
-                  text: 'Chỉnh sửa',
-                  icon: <Icon icon='tabler:edit' fontSize={20} />,
-                  menuItemProps: {
-                    onClick: () => {
-                      const product = store.products.find((product: Product) => {
-                        return product.id == row.id
-                      })
-                      setProductExist(product)
-                      handleOpenUpdate()
-                    }
-                  }
-                },
-                {
-                  text: 'Xoá',
-                  icon: <Icon icon='ic:outline-delete' fontSize={20} />,
-                  menuItemProps: {
-                    onClick: () => {
-                      const product = store.products.find((product: Product) => {
-                        return product.id == row.id
-                      })
-                      setProductExist(product)
-                      handleOpenDelete()
-                    }
-                  }
-                }
-              ]}
+              options={
+                row.state == STATE_MAINTAIN.ACTIVE
+                  ? [
+                      {
+                        text: 'Bảo trì',
+                        icon: <Icon icon='wpf:maintenance' fontSize={20} />,
+                        menuItemProps: {
+                          onClick: () => {
+                            const product = store.products.find((product: Product) => {
+                              return product.id == row.id
+                            })
+                            setProductExist(product)
+                            handleOpenMaintain()
+                          }
+                        }
+                      },
+                      {
+                        text: 'Chỉnh sửa',
+                        icon: <Icon icon='tabler:edit' fontSize={20} />,
+                        menuItemProps: {
+                          onClick: () => {
+                            const product = store.products.find((product: Product) => {
+                              return product.id == row.id
+                            })
+                            setProductExist(product)
+                            handleOpenUpdate()
+                          }
+                        }
+                      },
+                      {
+                        text: 'Xoá',
+                        icon: <Icon icon='ic:outline-delete' fontSize={20} />,
+                        menuItemProps: {
+                          onClick: () => {
+                            const product = store.products.find((product: Product) => {
+                              return product.id == row.id
+                            })
+                            setProductExist(product)
+                            handleOpenDelete()
+                          }
+                        }
+                      }
+                    ]
+                  : row.state == STATE_MAINTAIN.MAINTAIN
+                  ? [
+                      {
+                        text: 'Hoàn tất bảo trì',
+                        icon: <Icon icon='icon-park-outline:switching-done' fontSize={20} />,
+                        menuItemProps: {
+                          onClick: () => {
+                            const product = store.products.find((product: Product) => {
+                              return product.id == row.id
+                            })
+                            setProductExist(product)
+                            handleOpenCompleteMaintain()
+                          }
+                        }
+                      },
+                      {
+                        text: 'Chỉnh sửa',
+                        icon: <Icon icon='tabler:edit' fontSize={20} />,
+                        menuItemProps: {
+                          onClick: () => {
+                            const product = store.products.find((product: Product) => {
+                              return product.id == row.id
+                            })
+                            setProductExist(product)
+                            handleOpenUpdate()
+                          }
+                        }
+                      },
+                      {
+                        text: 'Xoá',
+                        icon: <Icon icon='ic:outline-delete' fontSize={20} />,
+                        menuItemProps: {
+                          onClick: () => {
+                            const product = store.products.find((product: Product) => {
+                              return product.id == row.id
+                            })
+                            setProductExist(product)
+                            handleOpenDelete()
+                          }
+                        }
+                      }
+                    ]
+                  : [
+                      {
+                        text: 'Chỉnh sửa',
+                        icon: <Icon icon='tabler:edit' fontSize={20} />,
+                        menuItemProps: {
+                          onClick: () => {
+                            const product = store.products.find((product: Product) => {
+                              return product.id == row.id
+                            })
+                            setProductExist(product)
+                            handleOpenUpdate()
+                          }
+                        }
+                      },
+                      {
+                        text: 'Xoá',
+                        icon: <Icon icon='ic:outline-delete' fontSize={20} />,
+                        menuItemProps: {
+                          onClick: () => {
+                            const product = store.products.find((product: Product) => {
+                              return product.id == row.id
+                            })
+                            setProductExist(product)
+                            handleOpenDelete()
+                          }
+                        }
+                      }
+                    ]
+              }
             />
           </Box>
         </div>
@@ -366,6 +526,24 @@ export default function Page() {
             )}
             {openDelete && (
               <DialogDelete handleClose={handleCloseDelete} handleConfirm={handleConfirmDelete} open={openDelete} />
+            )}
+            {openMaintain && (
+              <DialogMaintain
+                handleClose={handleCloseMaintain}
+                handleConfirm={handleConfirmMaintain}
+                open={openMaintain}
+                product={productExist!}
+                setProduct={setProductExist}
+              ></DialogMaintain>
+            )}
+            {openCompleteMaintain && (
+              <DialogMaintainComplete
+                handleClose={handleCloseCompleteMaintain}
+                handleConfirm={handleConfirmCompleteMaintain}
+                open={openCompleteMaintain}
+                product={productExist!}
+                setProduct={setProductExist}
+              ></DialogMaintainComplete>
             )}
           </Card>
         </Grid>

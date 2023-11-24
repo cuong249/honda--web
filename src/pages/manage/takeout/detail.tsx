@@ -1,6 +1,6 @@
 import CustomTextField from '@/@core/components/mui/text-field'
 import { STATE_MAINTAIN } from '@/api/enum'
-import { Product } from '@/api/types'
+import { Product, Takeout } from '@/api/types'
 import DialogCustomizedInfo from '@/views/components/dialogs/DialogCustomizedInfo'
 import { Grid } from '@mui/material'
 import { format } from 'date-fns'
@@ -8,7 +8,7 @@ import { format } from 'date-fns'
 interface Props {
   open: boolean
   handleClose: () => void
-  product: Product | undefined
+  takeout: Takeout | undefined
 }
 
 export default function DialogDetail({ open, handleClose, product }: Props) {

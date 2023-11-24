@@ -1,8 +1,7 @@
 import { Card, CardContent, CardHeader, Grid, Typography } from '@mui/material'
-
-import { AddDialog } from './AddDialog'
 import { AccountTable } from './AccountTable'
-
+import React from 'react'
+import { AddDialog } from './AddDialog'
 export default function Account() {
   return (
     <Grid container spacing={6}>
@@ -10,13 +9,10 @@ export default function Account() {
         <Card>
           <CardHeader title='Danh sách tài khoản' action={<AddDialog />} />
           <CardContent>
-            <AccountTable />
+            <AccountTable warehouseType='' />
           </CardContent>
         </Card>
       </Grid>
     </Grid>
   )
 }
-
-
-

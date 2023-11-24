@@ -6,107 +6,125 @@ import Button from '@mui/material/Button'
 import Divider from '@mui/material/Divider'
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch } from '@/store'
-import { updateWarehouse } from '@/store/reducers/warehouse'
-
+import * as Yup from 'yup'
+import { yupResolver } from '@hookform/resolvers/yup'
+import { STATE } from '@/api/enum'
+import { useForm } from 'react-hook-form'
+import { updateMaker } from '@/store/reducers/maker'
+import { Maker } from '@/api/types'
 interface Data {
   id: string
   show: Dispatch<SetStateAction<boolean>>
 }
 export const EditDialog = (props: Data) => {
-  const warehouses = useSelector((store: any) => store.warehouse.warehouses)
-  const exsistWarehouse = warehouses.filter((items: any) => items.id == props.id)[0]
-  const [open, setOpen] = React.useState<boolean>(true)
-  const [values, setValues] = React.useState(exsistWarehouse)
+  const maker = useSelector((store: any) => store.maker.makers).find((item: any) => item.id == props.id)
+  const validationSchema = Yup.object().shape({
+    name: Yup.string().required('Tên maker không được để trống !'),
+    state: Yup.string().required('Trạng thái không được để trống !'),
+    address: Yup.string().required('Địa chỉ không được để trống !'),
+    description: Yup.string().required('Mô tả không được để trống !')
+  })
+  const formOptions = { resolver: yupResolver(validationSchema) }
+  const { register, handleSubmit, formState, getValues } = useForm(formOptions)
+  const { errors } = formState
   const dispatch = useDispatch<AppDispatch>()
-  const changeHandler = (e: any) => {
-    setValues({ ...values, [e.target.name]: e.target.value })
+  function onSubmit(e: any) {
+    dispatch(updateMaker({ id: props.id, maker: getValues() as Maker }))
+    handleClose()
+    window.location.reload()
   }
+
   const handleClose = () => {
     props.show(false)
-    setOpen(false)
-  }
-  const handleSubmit = () => {
-    dispatch(updateWarehouse({ id: exsistWarehouse.id, warehouse: values }))
-    handleClose()
   }
   return (
-    <>
-      <Dialog open={open}>
-        <DialogTitle variant='h3'>Chỉnh sửa Maker</DialogTitle>
-        <Divider variant='middle' />
-        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          <Box
-            component='form'
-            sx={{
-              '& .MuiTextField-root': { m: 5, width: '25ch' }
-            }}
-            noValidate
-            autoComplete='off'
-            flexDirection='row'
+    <Dialog open={true}>
+      <DialogTitle variant='h3'>Chỉnh sửa Maker</DialogTitle>
+      <Divider variant='middle' />
+      <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        <Box
+          component='form'
+          sx={{
+            '& .MuiTextField-root': { m: 5, width: '25ch' }
+          }}
+          noValidate
+          autoComplete='off'
+          flexDirection='row'
+          onSubmit={handleSubmit(onSubmit)}
+        >
+          <TextField
+            {...register('name')}
+            label='Tên'
+            variant='outlined'
+            name='name'
+            id='name'
+            defaultValue={maker?.name}
+            style={{ width: '200' }}
+            error={errors.name && true}
+            helperText={errors.name?.message?.toString()}
+          />
+          <TextField
+            {...register('state')}
+            label='Trạng thái'
+            select
+            variant='outlined'
+            name='state'
+            defaultValue={maker?.state}
+            error={errors.state && true}
+            helperText={errors.state?.message?.toString()}
           >
-            <TextField
-              label='Tên'
-              variant='outlined'
-              name='name'
-              defaultValue={exsistWarehouse.name}
-              onChange={changeHandler}
-            />
-            <TextField
-              select
-              label='Trạng thái'
-              variant='outlined'
-              name='state'
-              defaultValue={exsistWarehouse.state}
-              onChange={changeHandler}
+            <MenuItem key={STATE.ACTIVE} value={STATE.ACTIVE}>
+              Đang hoạt động
+            </MenuItem>
+            <MenuItem key={STATE.INACTIVE} value={STATE.INACTIVE}>
+              Không hoạt động
+            </MenuItem>
+          </TextField>
+          <TextField
+            {...register('description')}
+            label='Mô tả'
+            variant='outlined'
+            name='description'
+            multiline
+            rows={3}
+            defaultValue={maker?.description}
+            error={errors.description && true}
+            helperText={errors.description?.message?.toString()}
+          />
+          <TextField
+            {...register('address')}
+            label='Địa chỉ'
+            variant='outlined'
+            name='address'
+            multiline
+            rows={3}
+            fullWidth={true}
+            defaultValue={maker?.address}
+            error={errors.address && true}
+            helperText={errors.address?.message?.toString()}
+          />
+          <DialogActions>
+            <IconButton
+              aria-label='close'
+              onClick={handleClose}
+              sx={{
+                position: 'absolute',
+                right: 8,
+                top: 8,
+                color: theme => theme.palette.grey[500]
+              }}
             >
-              <MenuItem key={1} value={'ACTIVE'}>
-                Đang hoạt động
-              </MenuItem>
-              <MenuItem key={2} value={'INACTIVE'}>
-                Không hoạt động
-              </MenuItem>
-            </TextField>
-            <TextField
-              label='Mô tả'
-              name='description'
-              variant='outlined'
-              defaultValue={exsistWarehouse.description}
-              multiline
-              rows={2}
-              onChange={changeHandler}
-            />
-            <TextField
-              label='Địa chỉ'
-              name='address'
-              variant='outlined'
-              defaultValue={exsistWarehouse.address}
-              multiline
-              rows={2}
-              onChange={changeHandler}
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <IconButton
-            aria-label='close'
-            onClick={handleClose}
-            sx={{
-              position: 'absolute',
-              right: 8,
-              top: 8,
-              color: theme => theme.palette.grey[500]
-            }}
-          >
-            <CloseIcon />
-          </IconButton>
-          <Button variant='outlined' onClick={handleClose}>
-            Đóng
-          </Button>
-          <Button variant='outlined' onClick={handleSubmit}>
-            Xác nhận
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </>
+              <CloseIcon />
+            </IconButton>
+            <Button variant='outlined' onClick={handleClose} color='error'>
+              Đóng
+            </Button>
+            <Button variant='outlined' type='submit' color='success'>
+              Xác nhận
+            </Button>
+          </DialogActions>
+        </Box>
+      </DialogContent>
+    </Dialog>
   )
 }

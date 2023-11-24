@@ -5,22 +5,20 @@ import React, { Dispatch, SetStateAction } from 'react'
 import Button from '@mui/material/Button'
 import Divider from '@mui/material/Divider'
 import { useSelector } from 'react-redux'
-
+import { AccountTable } from '@/pages/system/account/AccountTable'
+import { STATE } from '@/api/enum'
 interface Data {
   id: string
   show: Dispatch<SetStateAction<boolean>>
 }
 export const DetailDialog = (props: Data) => {
-  const warehouses = useSelector((store: any) => store.warehouse.warehouses)
-  const exsistWarehouse = warehouses.filter((items: any) => items.id == props.id)[0]
-  const [open, setOpen] = React.useState(true)
+  const maker = useSelector((store: any) => store.maker.makers).find((items: any) => items.id == props.id)
   const handleClose = () => {
     props.show(false)
-    setOpen(false)
   }
   return (
     <>
-      <Dialog open={open} maxWidth={'xl'}>
+      <Dialog open={true} maxWidth={'xl'}>
         <DialogTitle variant='h3'>Thông tin Maker</DialogTitle>
 
         <Divider variant='middle' />
@@ -38,7 +36,7 @@ export const DetailDialog = (props: Data) => {
               label='Tên'
               variant='outlined'
               name='name'
-              defaultValue={exsistWarehouse.name}
+              defaultValue={maker.name}
               InputProps={{
                 readOnly: true
               }}
@@ -47,7 +45,7 @@ export const DetailDialog = (props: Data) => {
               label='Địa chỉ'
               name='warehouseId'
               variant='outlined'
-              defaultValue={exsistWarehouse.address}
+              defaultValue={maker.address}
               multiline
               rows={2}
               InputProps={{
@@ -58,7 +56,7 @@ export const DetailDialog = (props: Data) => {
               label='Mô tả'
               name='description'
               variant='outlined'
-              defaultValue={exsistWarehouse.description}
+              defaultValue={maker.description}
               multiline
               rows={2}
               InputProps={{
@@ -69,13 +67,14 @@ export const DetailDialog = (props: Data) => {
               label='Trạng thái'
               variant='outlined'
               name='state'
-              defaultValue={exsistWarehouse.state == 'ACTIVE' ? 'Đang hoạt động' : 'Không hoạt động'}
+              defaultValue={maker.state == STATE.ACTIVE ? 'Đang hoạt động' : 'Không hoạt động'}
               InputProps={{
                 readOnly: true
               }}
             />
           </Box>
           Danh sách tài khoản quản lý Maker
+          <AccountTable warehouseType='MAKER' />
         </DialogContent>
         <DialogActions>
           <IconButton

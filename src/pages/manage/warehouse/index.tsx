@@ -1,7 +1,6 @@
 import { Card, CardContent, CardHeader, Grid } from '@mui/material'
 import { WarehouseTable } from './WarehouseTable'
 import { AddDialog } from './AddDialog'
-
 export default function Page() {
   return (
     <Grid container spacing={6}>

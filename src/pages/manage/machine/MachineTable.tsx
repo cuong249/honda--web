@@ -1,5 +1,5 @@
-import { AppDispatch } from '@/store'
-import { getAllMachine } from '@/store/reducers/machine'
+import { AppDispatch, RootState } from '@/store'
+import { getListMachine } from '@/store/reducers/machine'
 import React, { useEffect, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import IconButton from '@mui/material/IconButton'
@@ -18,21 +18,42 @@ import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
 import DeleteIcon from '@mui/icons-material/Delete'
 import ModeEditIcon from '@mui/icons-material/ModeEdit'
-import { TablePagination } from '@mui/material'
-import { getAllWarehouse } from '@/store/reducers/warehouse'
+import { Button, TablePagination } from '@mui/material'
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord'
-import { color, display } from '@mui/system'
-import { left, right } from '@popperjs/core'
+import { ROLE, STATE_MAINTAIN, TYPE_MACHINE } from '@/api/enum'
+import { getListWarehouse } from '@/store/reducers/warehouse'
+import { useAuth } from '@/hooks/useAuth'
+import { Machine } from '@/api/types'
 
-var position = ['Cổng 1', 'Cổng 2', 'Cổng 3', 'Cổng 4', 'Cổng 5', 'Cổng 6']
 export const MachineTable = () => {
-  const data = useSelector((store: any) => store.machine.machines)
-  const warehouses = useSelector((store: any) => store.warehouse.warehouses).filter((item: any) => item.type == 'HONDA')
+  const { user } = useAuth()
+  const query =
+    user?.role == ROLE.ADMIN
+      ? JSON.stringify({
+          state: [STATE_MAINTAIN.ACTIVE, STATE_MAINTAIN.INACTIVE, STATE_MAINTAIN.MAINTAIN]
+        })
+      : JSON.stringify({
+          state: [STATE_MAINTAIN.ACTIVE, STATE_MAINTAIN.MAINTAIN]
+        })
   const dispatch = useDispatch<AppDispatch>()
+
+  const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 })
+
   useEffect(() => {
-    dispatch(getAllWarehouse())
-    dispatch(getAllMachine())
-  }, [])
+    dispatch(
+      getListMachine({
+        limit: paginationModel.pageSize,
+        offset: paginationModel.page * paginationModel.pageSize,
+        search: '',
+        order: undefined,
+        arrange: undefined,
+        query: query
+      })
+    )
+    dispatch(getListWarehouse({}))
+  }, [dispatch, paginationModel.page, paginationModel.pageSize])
+  const machine = useSelector((store: RootState) => store.machine.machines)
+
   const [detailDialog, setDetailDialog] = useState<boolean>(false)
   const [editDialog, setEditDialog] = useState<boolean>(false)
   const [deleteDialog, setDeleteDialog] = useState<boolean>(false)
@@ -41,6 +62,7 @@ export const MachineTable = () => {
   const open = Boolean(anchorEl)
   const [page, setPage] = React.useState(0)
   const [rowsPerPage, setRowsPerPage] = React.useState(10)
+  const store = useSelector((state: RootState) => state.machine)
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget)
     setDetailDialog(false)
@@ -49,7 +71,23 @@ export const MachineTable = () => {
     setAnchorEl(null)
   }
   const handleChangePage = (event: unknown, newPage: number) => {
-    setPage(newPage)
+    dispatch(
+      getListMachine({
+        limit: paginationModel.pageSize,
+        offset: (newPage - 1) * paginationModel.pageSize,
+        search: '',
+        order: undefined,
+        arrange: undefined,
+        query: query
+      })
+    ).then(() => {
+      setPaginationModel(prev => {
+        return {
+          ...prev,
+          page: newPage - 1
+        }
+      })
+    })
   }
   const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
     setRowsPerPage(parseInt(event.target.value, 10))
@@ -82,7 +120,7 @@ export const MachineTable = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {data.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((rows: any, index: any) => (
+            {machine.slice(paginationModel.page * 10, paginationModel.page * 10 + 10).map((rows: any, index: any) => (
               <TableRow
                 hover
                 key={rows.name}
@@ -98,24 +136,28 @@ export const MachineTable = () => {
                   {rows.name}
                 </TableCell>
                 <TableCell align='center' onClick={() => setDetailDialog(true)}>
-                  {rows.type == 'FIXED' ? 'Cố định' : 'Di động'}
+                  {rows.type == TYPE_MACHINE.FIXED ? 'Cố định' : 'Di động'}
                 </TableCell>
                 <TableCell align='center' onClick={() => setDetailDialog(true)}>
-                  {warehouses.find((warehouses: any) => warehouses.id == rows.warehouseId).name}
+                  {rows.warehouse ? rows.warehouse?.name : 'Kho bảo trì'}
                 </TableCell>
                 <TableCell align='center' onClick={() => setDetailDialog(true)}>
-                  {position[Math.floor(Math.random() * position.length)]}
+                  {rows.location}
                 </TableCell>
                 <TableCell align='right' onClick={() => setDetailDialog(true)} sx={{ textAlign: 'left' }}>
-                  {rows.state == 'ACTIVE' ? (
+                  {rows.state == STATE_MAINTAIN.ACTIVE ? (
                     <FiberManualRecordIcon sx={{ color: '#40ed49', fontSize: '10px' }} />
-                  ) : rows.state == 'INACTIVE' ? (
+                  ) : rows.state == STATE_MAINTAIN.INACTIVE ? (
                     <FiberManualRecordIcon sx={{ color: '#fa2d53', fontSize: '10px' }} />
                   ) : (
                     <FiberManualRecordIcon sx={{ color: '#f5f24c', fontSize: '10px' }} />
                   )}
                   &nbsp;&nbsp;
-                  {rows.state == 'ACTIVE' ? 'Đang hoạt động' : rows.state == 'INACTIVE' ? 'Không hoạt động' : 'Bảo trì'}
+                  {rows.state == STATE_MAINTAIN.ACTIVE
+                    ? 'Đang hoạt động'
+                    : rows.state == STATE_MAINTAIN.INACTIVE
+                    ? 'Không hoạt động'
+                    : 'Bảo trì'}
                 </TableCell>
                 <TableCell align='center'>
                   <IconButton
@@ -170,13 +212,17 @@ export const MachineTable = () => {
         </Table>
       </TableContainer>
       <TablePagination
-        rowsPerPageOptions={[5, 10, 25]}
+        rowsPerPageOptions={[5, 10]}
         component='div'
-        count={data.length}
-        rowsPerPage={rowsPerPage}
-        page={page}
+        count={Math.floor((Number(store.amount) - 1) / paginationModel.pageSize) + 1}
+        rowsPerPage={10}
+        page={paginationModel.page + 1}
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
+        labelRowsPerPage='Số dòng trên mỗi trang'
+        labelDisplayedRows={({ from, to, count }) =>
+          `${from}-${to} trong số ${count !== -1 ? count : `nhiều hơn ${to}`}`
+        }
       />
     </>
   )

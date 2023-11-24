@@ -1,5 +1,5 @@
 import axiosClient from '../axiosClient'
-import { Product, getListParams, getParams } from '../types'
+import { Product, completeMaintainProductParams, getListParams, getParams, maintainProductParams } from '../types'
 
 const productApi = {
   create: async (data: Product) => {
@@ -33,6 +33,22 @@ const productApi = {
   },
   delete: async (id: string) => {
     const response = await axiosClient.delete(`/api/product/${id}`)
+
+    return response
+  },
+  maintain: async ({ id, description }: maintainProductParams) => {
+    const params = {
+      description: description
+    }
+    const response = await axiosClient.post(`/api/product/maintain/${id}`, params)
+
+    return response
+  },
+  completeMaintain: async ({ id, nextDate }: completeMaintainProductParams) => {
+    const params = {
+      nextDate: nextDate
+    }
+    const response = await axiosClient.post(`/api/product/maintain/complete/${id}`, params)
 
     return response
   }

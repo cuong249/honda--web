@@ -15,17 +15,28 @@ import MenuItem from '@mui/material/MenuItem'
 import DeleteIcon from '@mui/icons-material/Delete'
 import ModeEditIcon from '@mui/icons-material/ModeEdit'
 import { TablePagination } from '@mui/material'
-import { getAllWarehouse } from '@/store/reducers/warehouse'
+import CircleIcon from '@mui/icons-material/Circle'
 import { EditDialog } from './EditDialog'
 import { DeleteDialog } from './DeleteDialog'
 import { DetailDialog } from './DetailDialog'
+import { getListMaker } from '@/store/reducers/maker'
+import { ROLE, STATE, STATE_MAINTAIN } from '@/api/enum'
+import { useAuth } from '@/hooks/useAuth'
 
 export const MakerTable = () => {
-  const warehouse = useSelector((store: any) => store.warehouse.warehouses)
-  const data = warehouse.filter((warehouse: any) => warehouse.type == 'MAKER')
+  const { user } = useAuth()
+  const query =
+    user?.role == ROLE.ADMIN
+      ? JSON.stringify({
+          state: [STATE_MAINTAIN.ACTIVE, STATE_MAINTAIN.INACTIVE, STATE_MAINTAIN.MAINTAIN]
+        })
+      : JSON.stringify({
+          state: [STATE_MAINTAIN.ACTIVE, STATE_MAINTAIN.MAINTAIN]
+        })
+  const maker = useSelector((store: any) => store.maker.makers)
   const dispatch = useDispatch<AppDispatch>()
   useEffect(() => {
-    dispatch(getAllWarehouse())
+    dispatch(getListMaker({ limit: 10, offset: 0, search: '', order: undefined, arrange: undefined, query: query }))
   }, [])
   const [detailDialog, setDetailDialog] = useState<boolean>(false)
   const [editDialog, setEditDialog] = useState<boolean>(false)
@@ -54,7 +65,6 @@ export const MakerTable = () => {
       {editDialog ? <EditDialog id={makerId} show={setEditDialog} /> : null}
       {deleteDialog ? <DeleteDialog id={makerId} show={setDeleteDialog} /> : null}
       {detailDialog ? <DetailDialog id={makerId} show={setDetailDialog} /> : null}
-
       <TableContainer component={Paper}>
         <Table aria-label='simple table'>
           <TableHead>
@@ -67,7 +77,7 @@ export const MakerTable = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {data.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((rows: any, index: any) => (
+            {maker.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((rows: any, index: any) => (
               <TableRow
                 hover
                 key={index}
@@ -86,7 +96,13 @@ export const MakerTable = () => {
                   {rows.address}
                 </TableCell>
                 <TableCell align='right' onClick={() => setDetailDialog(true)}>
-                  {rows.state == 'ACTIVE' ? 'Đang hoạt động' : 'Không hoạt động'}
+                  {rows.state == STATE.ACTIVE ? (
+                    <CircleIcon sx={{ fontSize: 8 }} color='success' />
+                  ) : (
+                    <CircleIcon sx={{ fontSize: 8 }} color='error' />
+                  )}
+                  &nbsp; &nbsp;
+                  {rows.state == STATE.ACTIVE ? 'Đang hoạt động' : 'Không hoạt động'}
                 </TableCell>
                 <TableCell align='center'>
                   <IconButton
@@ -127,7 +143,6 @@ export const MakerTable = () => {
             >
               <ModeEditIcon /> Chỉnh sửa
             </MenuItem>
-
             <MenuItem
               key={2}
               onClick={() => {
@@ -143,11 +158,15 @@ export const MakerTable = () => {
       <TablePagination
         rowsPerPageOptions={[5, 10, 25]}
         component='div'
-        count={data.length}
+        count={maker.length}
         rowsPerPage={rowsPerPage}
         page={page}
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
+        labelRowsPerPage='Số dòng trên mỗi trang'
+        labelDisplayedRows={({ from, to, count }) =>
+          `${from}-${to} trong số ${count !== -1 ? count : `nhiều hơn ${to}`}`
+        }
       />
     </>
   )

@@ -1,5 +1,5 @@
-import { AppDispatch } from '@/store'
-import { getAllAccount } from '@/store/reducers/account'
+import { AppDispatch, RootState } from '@/store'
+
 import React, { useEffect, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import IconButton from '@mui/material/IconButton'
@@ -19,16 +19,34 @@ import MenuItem from '@mui/material/MenuItem'
 import DeleteIcon from '@mui/icons-material/Delete'
 import ModeEditIcon from '@mui/icons-material/ModeEdit'
 import { TablePagination } from '@mui/material'
-import { getAllWarehouse } from '@/store/reducers/warehouse'
-import CircleIcon from '@mui/icons-material/Circle';
+import CircleIcon from '@mui/icons-material/Circle'
+import { ROLE, STATE, STATE_MAINTAIN } from '@/api/enum'
+import { getListAccount } from '@/store/reducers/account'
+import { useAuth } from '@/hooks/useAuth'
+import { getListWarehouse } from '@/store/reducers/warehouse'
+import { getListMaker } from '@/store/reducers/maker'
 
-export const AccountTable = () => {
-  const data = useSelector((store: any) => store.account.accounts)
-  const warehouses = useSelector((store: any) => store.warehouse.warehouses).filter((item: any) => item.type == 'MAKER')
+interface Data {
+  warehouseType: string
+}
+export const AccountTable = (props: Data) => {
+  const { user } = useAuth()
+  const query =
+    user?.role == ROLE.ADMIN
+      ? JSON.stringify({
+          state: [STATE_MAINTAIN.ACTIVE, STATE_MAINTAIN.INACTIVE, STATE_MAINTAIN.MAINTAIN]
+        })
+      : JSON.stringify({
+          state: [STATE_MAINTAIN.ACTIVE, STATE_MAINTAIN.MAINTAIN]
+        })
+  const data = useSelector((store: RootState) => store.account.accounts)
+
+  const dataFilter = data.filter((items: any) => items.role == props.warehouseType)
   const dispatch = useDispatch<AppDispatch>()
   useEffect(() => {
-    dispatch(getAllAccount())
-    dispatch(getAllWarehouse())
+    dispatch(getListAccount({ limit: 10, offset: 0, search: '', order: undefined, arrange: undefined, query: query }))
+    dispatch(getListWarehouse({ limit: 10, offset: 0, search: '', order: undefined, arrange: undefined, query: query }))
+    dispatch(getListMaker({ limit: 10, offset: 0, search: '', order: undefined, arrange: undefined, query: query }))
   }, [])
   const [detailDialog, setDetailDialog] = useState<boolean>(false)
   const [editDialog, setEditDialog] = useState<boolean>(false)
@@ -71,55 +89,62 @@ export const AccountTable = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {data.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((rows: any, index: any) => (
-              <TableRow
-                hover
-                key={rows.name}
-                sx={{ cursor: 'pointer' }}
-                onClick={() => {
-                  setAccountId(rows.id)
-                }}
-              >
-                <TableCell align='center' onClick={() => setDetailDialog(true)}>
-                  {index + 1}
-                </TableCell>
-                <TableCell align='justify' onClick={() => setDetailDialog(true)}>
-                  {rows.displayName}
-                </TableCell>
-                <TableCell align='justify' onClick={() => setDetailDialog(true)}>
-                  {rows.phone}
-                </TableCell>
-                <TableCell align='center' onClick={() => setDetailDialog(true)}>
-                  {rows.email}
-                </TableCell>
-                <TableCell align='right' onClick={() => setDetailDialog(true)}>
-                  {rows.role == 'ADMIN'
-                    ? 'Quản trị viên'
-                    : rows.role == 'MAKER'
-                    ? 'MAKER'
-                    : rows.role == 'DELIVERY'
-                    ? 'Tài xế'
-                    : 'Quản lý kho'}
-                </TableCell>
-                <TableCell align='right' onClick={() => setDetailDialog(true)}>
-                  {rows.state == 'ACTIVE' ? <CircleIcon sx={{ fontSize: 8 }} color='success'/> : <CircleIcon  sx={{ fontSize: 8 }} color='error'/>}
-                  &nbsp;&nbsp;
-                  {rows.state == 'ACTIVE' ? 'Đang hoạt động' : 'Không hoạt động'}
-                </TableCell>
-                <TableCell align='center'>
-                  <IconButton
-                    aria-label='more'
-                    id='long-button'
-                    aria-controls={open ? 'long-menu' : undefined}
-                    aria-expanded={open ? 'true' : undefined}
-                    aria-haspopup='true'
-                    onClick={handleClick}
-                  >
-                    <MoreVertIcon />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
+            {(props.warehouseType ? dataFilter : data)
+              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+              .map((rows: any, index: any) => (
+                <TableRow
+                  hover
+                  key={rows.name}
+                  sx={{ cursor: 'pointer' }}
+                  onClick={() => {
+                    setAccountId(rows.id)
+                    console.log(rows.id)
+                  }}
+                >
+                  <TableCell align='center' onClick={() => setDetailDialog(true)}>
+                    {index + 1}
+                  </TableCell>
+                  <TableCell align='justify' onClick={() => setDetailDialog(true)}>
+                    {rows.lastName.concat(' ').concat(rows.firstName)}
+                  </TableCell>
+                  <TableCell align='justify' onClick={() => setDetailDialog(true)}>
+                    {rows.phone}
+                  </TableCell>
+                  <TableCell align='center' onClick={() => setDetailDialog(true)}>
+                    {rows.email}
+                  </TableCell>
+                  <TableCell align='right' onClick={() => setDetailDialog(true)}>
+                    {rows.role == ROLE.ADMIN
+                      ? 'Quản trị viên'
+                      : rows.role == ROLE.MAKER
+                      ? 'Maker'
+                      : rows.role == ROLE.DELIVERY
+                      ? 'Tài xế'
+                      : 'Quản lý kho'}
+                  </TableCell>
+                  <TableCell align='right' onClick={() => setDetailDialog(true)}>
+                    {rows.state == STATE.ACTIVE ? (
+                      <CircleIcon sx={{ fontSize: 8 }} color='success' />
+                    ) : (
+                      <CircleIcon sx={{ fontSize: 8 }} color='error' />
+                    )}
+                    &nbsp;&nbsp;
+                    {rows.state == STATE.ACTIVE ? 'Đang hoạt động' : 'Không hoạt động'}
+                  </TableCell>
+                  <TableCell align='center'>
+                    <IconButton
+                      aria-label='more'
+                      id='long-button'
+                      aria-controls={open ? 'long-menu' : undefined}
+                      aria-expanded={open ? 'true' : undefined}
+                      aria-haspopup='true'
+                      onClick={handleClick}
+                    >
+                      <MoreVertIcon />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
           </TableBody>
           <Menu
             id='long-menu'

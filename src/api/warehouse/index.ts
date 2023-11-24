@@ -4,7 +4,6 @@ import { Warehouse, getListParams, getParams } from '../types'
 const warehouseApi = {
   create: async (data: Warehouse) => {
     const response = await axiosClient.post(`/api/warehouse`, data)
-
     return response
   },
   get: async ({ id, query }: getParams) => {
@@ -23,6 +22,7 @@ const warehouseApi = {
         (search ? `&search=${search}` : ``) +
         (query ? `&query=${query}` : ``)
     )
+    console.log(response)
 
     return response
   },

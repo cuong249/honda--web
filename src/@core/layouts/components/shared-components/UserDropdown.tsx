@@ -136,7 +136,7 @@ const UserDropdown = (props: Props) => {
             </Box>
           </Box>
         </Box>
-        <Divider sx={{ my: theme => `${theme.spacing(2)} !important` }} />
+        {/* <Divider sx={{ my: theme => `${theme.spacing(2)} !important` }} />
         <MenuItemStyled sx={{ p: 0 }} onClick={() => handleDropdownClose()}>
           <Box sx={styles}>
             <Icon icon='tabler:user-check' />
@@ -149,36 +149,12 @@ const UserDropdown = (props: Props) => {
             Settings
           </Box>
         </MenuItemStyled>
-        {/* <MenuItemStyled sx={{ p: 0 }} onClick={() => handleDropdownClose()}>
-          <Box sx={styles}>
-            <Icon icon='tabler:credit-card' />
-            Billing
-          </Box>
-        </MenuItemStyled> */}
-        <Divider sx={{ my: theme => `${theme.spacing(2)} !important` }} />
-        <MenuItemStyled sx={{ p: 0 }} onClick={() => handleDropdownClose()}>
-          <Box sx={styles}>
-            <Icon icon='tabler:lifebuoy' />
-            Help
-          </Box>
-        </MenuItemStyled>
-        <MenuItemStyled sx={{ p: 0 }} onClick={() => handleDropdownClose()}>
-          <Box sx={styles}>
-            <Icon icon='tabler:info-circle' />
-            FAQ
-          </Box>
-        </MenuItemStyled>
-        {/* <MenuItemStyled sx={{ p: 0 }} onClick={() => handleDropdownClose()}>
-          <Box sx={styles}>
-            <Icon icon='tabler:currency-dollar' />
-            Pricing
-          </Box>
-        </MenuItemStyled> */}
-        <Divider sx={{ my: theme => `${theme.spacing(2)} !important` }} />
+
+        <Divider sx={{ my: theme => `${theme.spacing(2)} !important` }} /> */}
         <MenuItemStyled sx={{ p: 0 }} onClick={handleLogout}>
           <Box sx={styles}>
             <Icon icon='tabler:logout' />
-            Sign Out
+            Đăng xuất
           </Box>
         </MenuItemStyled>
       </Menu>

@@ -1,4 +1,3 @@
-import React, { Dispatch, SetStateAction, useEffect } from 'react'
 import {
   DialogTitle,
   DialogContent,
@@ -8,183 +7,173 @@ import {
   IconButton,
   MenuItem,
   Button,
-  Divider,
-  Typography
+  Divider
 } from '@mui/material'
 import { Box } from '@mui/system'
 import { AppDispatch } from '@/store'
 import CloseIcon from '@mui/icons-material/Close'
 import { useDispatch, useSelector } from 'react-redux'
-import { createMachine, getAllMachine } from '@/store/reducers/machine'
-import { getAllWarehouse } from '@/store/reducers/warehouse'
-interface Data {
-  show: Dispatch<SetStateAction<boolean>>
-}
-export const AddDialog = (props: Data) => {
-  const warehouses = useSelector((store: any) => store.warehouse.warehouses).filter((item: any) => item.type == 'HONDA')
-  const machine = useSelector((store: any) => store.machine.machines)
-  const dispatch = useDispatch<AppDispatch>()
-  useEffect(() => {
-    dispatch(getAllWarehouse())
-    dispatch(getAllMachine())
-  }, [])
-  const [open, setOpen] = React.useState(false)
-  const [data, setData] = React.useState({
-    name: '',
-    type: '',
-    warehouseId: '',
-    state: '',
-    option: ''
-  })
-  const [error, setError] = React.useState({
-    name: false,
-    type: false,
-    warehouseId: false,
-    state: false,
-    option: false
-  })
-  const [helperText, setHelperText] = React.useState<string>()
-  const changeHandler = (e: any) => {
-    setData({ ...data, [e.target.name]: e.target.value })
-  }
+import { STATE, STATE_MAINTAIN, TYPE_MACHINE } from '@/api/enum'
+import React from 'react'
+import { createMachine } from '@/store/reducers/machine'
+import { useForm } from 'react-hook-form'
+import * as Yup from 'yup'
+import { yupResolver } from '@hookform/resolvers/yup'
+import { Machine } from '@/api/types'
+import AddCircleIcon from '@mui/icons-material/AddCircle'
 
-  const handleSubmit = () => {
-    if (nameConfirm() && data.state !== '' && data.type !== '' && data.warehouseId !== '') {
-      console.log('cool')
-      // dispatch(createMachine(data))
-      // handleClose()
-    } else {
-      console.log('not cool')
-    }
-    // dispatch(createMachine(data))
-    // handleClose()
+export const AddDialog = () => {
+  const validationSchema = Yup.object().shape({
+    name: Yup.string().required('Tên không được để trống !'),
+    type: Yup.string().required('Loại không được để trống !'),
+    warehouseId: Yup.string().required('Kho không được để trống !'),
+    state: Yup.string().required('Trạng thái không được để trống !'),
+    location: Yup.string().required('Vị trí không được để trống !')
+  })
+  const formOptions = { resolver: yupResolver(validationSchema) }
+  const { register, handleSubmit, formState, getValues } = useForm(formOptions)
+  const { errors } = formState
+  function onSubmit(e: any) {
+    dispatch(createMachine(getValues() as Machine))
+    handleClose()
+    window.location.reload()
   }
-  const nameConfirm = () => {
-    if (machine.find((item: any) => item.name == data.name)) {
-      setHelperText('Tên máy quét đã tồn tại')
-      // setError(...error,[error.name]:true)
-      return false
-    } else if (data.name == '' || data.name == undefined || data.name == null) {
-      setHelperText('Tên không được để trống')
-    }
-    return true
+  const warehouses = useSelector((store: any) => store.warehouse.warehouses)
+  const dispatch = useDispatch<AppDispatch>()
+  const [open, setOpen] = React.useState(false)
+  const handleClickOpen = () => {
+    setOpen(true)
   }
   const handleClose = () => {
-    props.show(false)
+    setOpen(false)
   }
   return (
-    <Dialog open={true}>
-      <DialogTitle variant='h3'>
-        {'Thêm máy quét'}
-        <IconButton
-          aria-label='close'
-          onClick={handleClose}
-          sx={{
-            left: '60%'
-          }}
-        >
-          <CloseIcon fontSize='inherit' />
-        </IconButton>
-      </DialogTitle>
-      <Divider variant='middle' />
-      <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-        <Box component='form' noValidate autoComplete='off' flexDirection='row'>
-          {/* Tên máy quét */}
-          <TextField
-            label='Tên'
-            variant='outlined'
-            name='name'
-            onChange={changeHandler}
-            helperText={helperText}
-            error={error.name}
+    <>
+      <Button variant='outlined' onClick={handleClickOpen}>
+        <AddCircleIcon />
+        &nbsp; Thêm máy quét
+      </Button>
+      <Dialog open={open}>
+        <DialogTitle variant='h3'>
+          {'Thêm máy quét'}
+          <IconButton
+            aria-label='close'
+            onClick={handleClose}
             sx={{
-              m: 5,
-              width: '25ch'
-            }}
-          />
-
-          <TextField
-            select
-            label='Loại'
-            variant='outlined'
-            name='type'
-            defaultValue={''}
-            onChange={changeHandler}
-            sx={{
-              m: 5,
-              width: '25ch'
+              left: '60%'
             }}
           >
-            <MenuItem key={1} value={'MOVING'}>
-              Di động
-            </MenuItem>
-            <MenuItem key={2} value={'FIXED'}>
-              Cố định
-            </MenuItem>
-          </TextField>
-          <TextField
-            select
-            label='Kho'
-            name='warehouseId'
-            variant='outlined'
-            defaultValue=''
-            onChange={changeHandler}
-            sx={{
-              m: 5,
-              width: '25ch'
-            }}
-          >
-            {warehouses.map((items: any) => (
-              <MenuItem key={items.id} value={items.id}>
-                {items.name}
+            <CloseIcon fontSize='inherit' />
+          </IconButton>
+        </DialogTitle>
+        <Divider variant='middle' />
+        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <Box component='form' noValidate autoComplete='off' flexDirection='row' onSubmit={handleSubmit(onSubmit)}>
+            <TextField
+              {...register('name')}
+              label='Tên'
+              variant='outlined'
+              name='name'
+              helperText={errors.name?.message?.toString()}
+              error={errors.name && true}
+              sx={{
+                m: 5,
+                width: '25ch'
+              }}
+            />
+            <TextField
+              {...register('type')}
+              select
+              label='Loại'
+              variant='outlined'
+              name='type'
+              defaultValue={''}
+              helperText={errors.type?.message?.toString()}
+              error={errors.type && true}
+              sx={{
+                m: 5,
+                width: '25ch'
+              }}
+            >
+              <MenuItem key={TYPE_MACHINE.MOVING} value={TYPE_MACHINE.MOVING}>
+                Di động
               </MenuItem>
-            ))}
-          </TextField>
-          <TextField
-            label='Trạng thái'
-            select
-            variant='outlined'
-            name='state'
-            defaultValue=''
-            onChange={changeHandler}
-            sx={{
-              m: 5,
-              width: '25ch'
-            }}
-          >
-            <MenuItem key={1} value={'ACTIVE'}>
-              Đang hoạt động
-            </MenuItem>
-            <MenuItem key={2} value={'INACTIVE'}>
-              Không hoạt động
-            </MenuItem>
-            <MenuItem key={3} value={'MAINTAIN'}>
-              Bảo trì
-            </MenuItem>
-          </TextField>
-          <TextField
-            label='Vị trí'
-            variant='outlined'
-            onChange={changeHandler}
-            defaultValue=''
-            multiline
-            rows={3}
-            sx={{
-              m: 5,
-              width: '90%'
-            }}
-          />
-        </Box>
-      </DialogContent>
-
-      <DialogActions>
-        <Button variant='outlined' color='error' onClick={handleClose}>
-          Đóng
-        </Button>
-        <Button variant='outlined' color='success' onClick={handleSubmit}>
-          Xác nhận
-        </Button>
-      </DialogActions>
-    </Dialog>
+              <MenuItem key={TYPE_MACHINE.FIXED} value={TYPE_MACHINE.FIXED}>
+                Cố định
+              </MenuItem>
+            </TextField>
+            <TextField
+              {...register('warehouseId')}
+              select
+              label='Kho'
+              name='warehouseId'
+              variant='outlined'
+              defaultValue=''
+              helperText={errors.warehouseId?.message?.toString()}
+              error={errors.warehouseId && true}
+              sx={{
+                m: 5,
+                width: '25ch'
+              }}
+            >
+              {warehouses
+                .filter((warehouses: any) => warehouses.state == STATE.ACTIVE)
+                .map((items: any) => (
+                  <MenuItem key={items.id} value={items.id}>
+                    {items.name}
+                  </MenuItem>
+                ))}
+            </TextField>
+            <TextField
+              {...register('state')}
+              label='Trạng thái'
+              select
+              variant='outlined'
+              name='state'
+              defaultValue=''
+              helperText={errors.state?.message?.toString()}
+              error={errors.state && true}
+              sx={{
+                m: 5,
+                width: '25ch'
+              }}
+            >
+              <MenuItem key={STATE_MAINTAIN.ACTIVE} value={STATE_MAINTAIN.ACTIVE}>
+                Đang hoạt động
+              </MenuItem>
+              <MenuItem key={STATE_MAINTAIN.INACTIVE} value={STATE_MAINTAIN.INACTIVE}>
+                Không hoạt động
+              </MenuItem>
+              <MenuItem key={STATE_MAINTAIN.MAINTAIN} value={STATE_MAINTAIN.MAINTAIN}>
+                Bảo trì
+              </MenuItem>
+            </TextField>
+            <TextField
+              {...register('location')}
+              label='Vị trí'
+              variant='outlined'
+              name='location'
+              defaultValue=''
+              multiline
+              helperText={errors.location?.message?.toString()}
+              error={errors.location && true}
+              rows={3}
+              sx={{
+                m: 5,
+                width: '90%'
+              }}
+            />
+            <DialogActions>
+              <Button variant='outlined' color='error' onClick={handleClose}>
+                Đóng
+              </Button>
+              <Button variant='outlined' color='success' type='submit'>
+                Xác nhận
+              </Button>
+            </DialogActions>
+          </Box>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

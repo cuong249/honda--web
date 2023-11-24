@@ -6,7 +6,8 @@ import {
   TYPE_WAREHOUSE,
   STATUS_TRANSFER,
   STATUS_TRANSFERDETAIL,
-  IMPORT_SCAN
+  IMPORT_SCAN,
+  STATE_MAINTENANCE
 } from '@/api/enum'
 
 type Account = {
@@ -71,6 +72,16 @@ type Permission = {
   updatedAt: number
 }
 
+type Maintenance = {
+  id: string
+  startDate: number
+  finishDate: number
+  description: string
+  state: STATE_MAINTENANCE
+  createdAt: number
+  updatedAt: number
+}
+
 type Product = {
   id: string
   name: string
@@ -85,6 +96,13 @@ type Product = {
   storageWarehouse: Warehouse
   deliveryWarehouse: Warehouse
   currentWarehouse: Warehouse
+  maintenance: Maintenance
+  maintainNext: number
+
+  //property to maintain
+  descriptionMaintenance: string
+  nextDate: number
+
   state: STATE_MAINTAIN
   option: string | null
   createdAt: number
@@ -127,18 +145,33 @@ type Scan = {
   updatedAt: number
 }
 
+type transferProduct = {
+  id: string
+  scanId: string | null
+  productId: string | null
+  categoryId: string | null
+  description: string
+  status: STATUS_TRANSFERDETAIL
+  state: STATE
+  option: string
+  machineId: string | null
+  import: IMPORT_SCAN
+}
+
 type Takeout = {
   id: string
   title: string | null
   deliveryId: string | null
   fromWarehouseId: string
+  fromWarehouse: Warehouse
   toWarehouseId: string
+  toWarehouse: Warehouse
   machineId: string | null
+  machine: Machine
   transferDate: string
   status: STATUS_TRANSFER
   state: STATE
-  listTransferDetail: TransferDetail[]
-  listScan: Scan[]
+  listProduct: transferProduct[]
   option: string | null
   createdAt: number
   updatedAt: number
@@ -181,4 +214,27 @@ interface getListParams {
   query?: string
 }
 
-export type { Account, Category, Delivery, Machine, Product, Role, Takeout, Warehouse, Maker, getListParams, getParams }
+interface maintainProductParams {
+  id?: string
+  description?: string
+}
+interface completeMaintainProductParams {
+  id?: string
+  nextDate?: number
+}
+export type {
+  Account,
+  Category,
+  Delivery,
+  Machine,
+  Maintenance,
+  Product,
+  Role,
+  Takeout,
+  Warehouse,
+  Maker,
+  getListParams,
+  getParams,
+  maintainProductParams,
+  completeMaintainProductParams
+}

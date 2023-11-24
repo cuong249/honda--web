@@ -1,4 +1,4 @@
-import { Product, getListParams, getParams } from '@/api/types'
+import { Product, completeMaintainProductParams, getListParams, getParams, maintainProductParams } from '@/api/types'
 import productApi from '@/api/product'
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 import { number } from 'yup'
@@ -37,6 +37,21 @@ export const deleteProduct = createAsyncThunk('appProduct/delete', async (id: st
 
   return response.data
 })
+
+export const maintainProduct = createAsyncThunk('appProduct/delete', async (params: maintainProductParams) => {
+  const response = await productApi.maintain(params)
+
+  return response.data
+})
+
+export const completeMaintainProduct = createAsyncThunk(
+  'appProduct/delete',
+  async (params: completeMaintainProductParams) => {
+    const response = await productApi.completeMaintain(params)
+
+    return response.data
+  }
+)
 
 export const appProductSlice = createSlice({
   name: 'appProduct',

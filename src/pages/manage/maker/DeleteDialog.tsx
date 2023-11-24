@@ -16,49 +16,44 @@ interface Data {
   show: Dispatch<SetStateAction<boolean>>
 }
 export const DeleteDialog = (props: Data) => {
-  const [open, setOpen] = React.useState(true)
   const dispatch = useDispatch<AppDispatch>()
-
   const handleClose = () => {
     props.show(false)
-    setOpen(false)
   }
   const handleSubmit = () => {
     dispatch(deleteWarehouse(props.id))
     handleClose()
   }
   return (
-    <>
-      <Dialog
-        open={open}
-        onClose={handleClose}
-        aria-labelledby='alert-dialog-title'
-        aria-describedby='alert-dialog-description'
+    <Dialog
+      open={true}
+      onClose={handleClose}
+      aria-labelledby='alert-dialog-title'
+      aria-describedby='alert-dialog-description'
+    >
+      <DialogTitle id='customized-dialog-title' variant='h3'>
+        Thông báo !
+      </DialogTitle>
+      <IconButton
+        aria-label='close'
+        onClick={handleClose}
+        sx={{
+          position: 'absolute',
+          right: 8,
+          top: 8,
+          color: theme => theme.palette.grey[500]
+        }}
       >
-        <DialogTitle id='customized-dialog-title' variant='h3'>
-          Thông báo !
-        </DialogTitle>
-        <IconButton
-          aria-label='close'
-          onClick={handleClose}
-          sx={{
-            position: 'absolute',
-            right: 8,
-            top: 8,
-            color: theme => theme.palette.grey[500]
-          }}
-        >
-          <CloseIcon />
-        </IconButton>
-        <Divider variant='middle' />
-        <DialogContent sx={{ m: 0, p: 2 }}>
-          <DialogContentText>Bạn có chắc chắn muốn vô hiệu hóa Maker này ?</DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose}>Hủy</Button>
-          <Button onClick={handleSubmit}>Xác nhận</Button>
-        </DialogActions>
-      </Dialog>
-    </>
+        <CloseIcon />
+      </IconButton>
+      <Divider variant='middle' />
+      <DialogContent sx={{ m: 0, p: 2 }}>
+        <DialogContentText>Bạn có chắc chắn muốn vô hiệu hóa Maker này ?</DialogContentText>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={handleClose}>Hủy</Button>
+        <Button onClick={handleSubmit}>Xác nhận</Button>
+      </DialogActions>
+    </Dialog>
   )
 }
